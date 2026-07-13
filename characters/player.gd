@@ -60,6 +60,8 @@ var invincibility := 2.0
 
 ## The horizontal direction the player is moving to.
 var direction := 0.0
+## The number of times the player has jumped.
+var jump_count := 0
 ## The time left to jump.
 var jump_buffer := 0.0
 ## The time left to jump.
@@ -250,11 +252,20 @@ func _physics_process(delta: float) -> void:
 
 ## Makes the character jump upwards.
 func jump() -> void:
+	# Reset jump count (for double jump)
+	if is_on_floor():
+		jump_count = 0
+	
 	# Jump logic (with jump buffering)
 	if Input.is_action_just_pressed(&"jump") and freeze_time <= 0.0:
 		jump_buffer = jump_buffering
 		
 		if coyote_buffer > 0.0:
+			jump_now()
+			move_and_slide()
+		elif jump_count < 2:
+			# Double jump
+			print("[player] double jump")
 			jump_now()
 			move_and_slide()
 	# Variable jump height logic
@@ -274,6 +285,7 @@ func jump() -> void:
 
 
 func jump_now() -> void:
+	jump_count += 1
 	AudioManager.play(JUMP_SOUND, 1.0, &"Sounds")
 	velocity.y = -jump_height
 	state_machine.current_state = jump_state
